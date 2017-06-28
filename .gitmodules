@@ -1,0 +1,3 @@
+[submodule "Packages/Unity-Audio-Sequencer"]
+	path = Packages/Unity-Audio-Sequencer
+	url = https://github.com/Nidre/Unity-Audio-Sequencer.git
