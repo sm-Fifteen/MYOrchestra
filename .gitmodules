@@ -1,0 +1,6 @@
+[submodule "Assets/CSharpSynthForUnity"]
+	path = Assets/CSharpSynthForUnity
+	url = https://github.com/sm-Fifteen/CSharpSynthForUnity
+[submodule "Submodules/CSharpSynthForUnity"]
+	path = Submodules/CSharpSynthForUnity
+	url = https://github.com/sm-Fifteen/CSharpSynthForUnity
