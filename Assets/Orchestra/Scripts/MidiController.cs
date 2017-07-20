@@ -5,8 +5,10 @@ using UnityEngine;
 using Pose = Thalmic.Myo.Pose;
 
 public class MidiController : MonoBehaviour {
-	public const float DIR_CHANGE_ANGLE_THRESH = 50; //Degrees
-	public const float DIR_CHANGE_SPEED_THRESH = 60; //Degrees per sec
+	public const float MOVEMENT_SPEED_THRESH = 60; //Degrees per sec
+	public const float MOVEMENT_ANGLE_THRESH = 10; //Degrees??
+	public const float MINIMUM_MOVEMENT_TIME = 0.2f;
+	public const float LONG_PAUSE_MINIMUM_DURATION = 0.3f;
 
 	public ThalmicMyo thalmicMyo;
 
@@ -42,38 +44,44 @@ public class MidiController : MonoBehaviour {
 
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 		Vector2 gyroXY = (Vector2) thalmicMyo.gyroscope;
-		bool foo = false;
+		bool updateTempo = false;
 
 		// Has direction changed or movement paused?
 		float angleDiff = Vector2.Angle(gyroXY.normalized, lastDirection);
+		Debug.Log("Angle diff : " + angleDiff);
 
-		if (gyroXY.magnitude > DIR_CHANGE_SPEED_THRESH) {
-			// Movement is fast enough to be recognizable
-			if (angleDiff > DIR_CHANGE_ANGLE_THRESH) {
-				// Angle has changed drastically without significant pause
-				Debug.Log("Angle change");
-				foo = true;
-			} else {
-				// Regular movement
-				maxMagnitude = Mathf.Max(maxMagnitude, gyroXY.magnitude);
-				alreadyPausing = false;
-			}
+		if (gyroXY.magnitude > MOVEMENT_SPEED_THRESH) {
+			/* Angle variation only works if you'Re doing 8 motions, which is kinda ~~ */
+            //if (angleDiff > MOVEMENT_ANGLE_THRESH) {
+            //    // Angle has changed drastically with or without a significant pause
+            //    Debug.Log("Angle change");
+			//	lastDirection = gyroXY.normalized;
+            //    updateTempo = true;
+            //} else {
+                // Regular movement
+                maxMagnitude = Mathf.Max(maxMagnitude, gyroXY.magnitude);
+                alreadyPausing = false;
+            //}
 		} else if (!alreadyPausing) {
 			// Movement has stopped (and wasn't stopping before)
 			Debug.Log("Paused");
 			alreadyPausing = true;
-			foo = true;
+			updateTempo = true;
 		}
 
-		if (foo) {
+		if (updateTempo && (Time.time - lastTime) > MINIMUM_MOVEMENT_TIME) {
 			if (lastTime > 0) {
 				player.currentTempo = (uint)(60 / (Time.time - lastTime));
+				Debug.LogWarning (Time.time - lastTime);
 			}
 
 			thalmicMyo.Vibrate (Thalmic.Myo.VibrationType.Short);
 
 			lastTime = Time.time;
 			maxMagnitude = 0;
+		} else if (alreadyPausing && (Time.time - lastTime) > LONG_PAUSE_MINIMUM_DURATION) {
+			// TODO : Pause immediately if hand is raised
+			player.currentTempo = (uint)(60 / (Time.time - lastTime));
 		}
 
 		lastDirection = gyroXY.normalized;
