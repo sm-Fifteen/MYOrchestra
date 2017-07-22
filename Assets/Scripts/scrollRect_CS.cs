@@ -26,5 +26,33 @@ public class scrollRect_CS : MonoBehaviour {
         for (int i = 0; i < btn.Length; i++) {
             distance[i] = Mathf.Abs(center.transform.position.x - btn[i].transform.position.x);
         }
+
+        float minDistance = Mathf.Min(distance);
+
+        for(int a = 0; a < btn.Length; a++){
+            if (minDistance == distance[a])
+            {
+                minButtonNum = a;
+            }
+        }
+
+        if (!dragging) {
+            LerpToBtn(minButtonNum * -btnDistance);
+        }
+    }
+
+    void LerpToBtn(int position) {
+        float newX = Mathf.Lerp(panel.anchoredPosition.x, position, Time.deltaTime * 2.5f);
+        Vector2 newPosition = new Vector2(newX, panel.anchoredPosition.y);
+
+        panel.anchoredPosition = newPosition;
+    }
+
+    public void StartDrag(){
+        dragging = true;
+    }
+
+    public void EndDrag(){
+        dragging = false;
     }
 }
