@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,6 +19,17 @@ public class scrollRect_CS : MonoBehaviour {
     private int btnLenght;
 
     void Start(){
+        DirectoryInfo dir = new DirectoryInfo("Assets/Resources/Music_menu/");
+        FileInfo[] fichiers = dir.GetFiles();
+
+        List<String> list = new List<String>();
+
+        foreach (FileInfo fichier in fichiers)
+        {
+
+            list.Add(fichier.Name.ToString());
+        }
+
         btnLenght = btn.Length;
         distance = new float[btnLenght];
         distanceRepo = new float[btnLenght];
