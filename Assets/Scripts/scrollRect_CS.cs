@@ -9,39 +9,61 @@ public class scrollRect_CS : MonoBehaviour {
     public Button[] btn;
     public RectTransform center;
 
-    private float[] distance;
+    public float[] distance;
+    public float[] distanceRepo;
     private bool dragging = false; //true = drag
     private int btnDistance;
     private int minButtonNum;
+    private int btnLenght;
 
     void Start(){
-        int btnLenght = btn.Length;
+        btnLenght = btn.Length;
         distance = new float[btnLenght];
+        distanceRepo = new float[btnLenght];
 
-        btnDistance = (int)Mathf.Abs(btn[1].GetComponent<RectTransform>() .anchoredPosition.x - btn[0].GetComponent<RectTransform>().anchoredPosition.x);
+        btnDistance = (int)Mathf.Abs(btn[1].GetComponent<RectTransform>().anchoredPosition.x - btn[0].GetComponent<RectTransform>().anchoredPosition.x);
   
     }
 
     void Update(){
         for (int i = 0; i < btn.Length; i++) {
-            distance[i] = Mathf.Abs(center.transform.position.x - btn[i].transform.position.x);
+            distanceRepo[i] = center.GetComponent<RectTransform>().position.x - btn[i].GetComponent<RectTransform>().position.x;
+            distance[i] = Mathf.Abs(distanceRepo[i]);
+
+            if (distanceRepo[i] > 1000){
+                float curX = btn[i].GetComponent<RectTransform>().anchoredPosition.x;
+                float curY = btn[i].GetComponent<RectTransform>().anchoredPosition.y;
+
+                Vector2 newAnchoredPos = new Vector2(curX + (btnLenght * btnDistance), curY);
+                btn[i].GetComponent<RectTransform>().anchoredPosition = newAnchoredPos;
+            }
+
+            if (distanceRepo[i] < -1000)
+            {
+                float curX = btn[i].GetComponent<RectTransform>().anchoredPosition.x;
+                float curY = btn[i].GetComponent<RectTransform>().anchoredPosition.y;
+
+                Vector2 newAnchoredPos = new Vector2(curX - (btnLenght * btnDistance), curY);
+                btn[i].GetComponent<RectTransform>().anchoredPosition = newAnchoredPos;
+            }
         }
 
         float minDistance = Mathf.Min(distance);
 
         for(int a = 0; a < btn.Length; a++){
-            if (minDistance == distance[a])
-            {
+            if (minDistance == distance[a]){
                 minButtonNum = a;
             }
         }
 
         if (!dragging) {
-            LerpToBtn(minButtonNum * -btnDistance);
+            //LerpToBtn(minButtonNum * -btnDistance);
+
+            LerpToBtn(-btn[minButtonNum].GetComponent<RectTransform>().anchoredPosition.x);
         }
     }
 
-    void LerpToBtn(int position) {
+    void LerpToBtn(float position) {
         float newX = Mathf.Lerp(panel.anchoredPosition.x, position, Time.deltaTime * 2.5f);
         Vector2 newPosition = new Vector2(newX, panel.anchoredPosition.y);
 
