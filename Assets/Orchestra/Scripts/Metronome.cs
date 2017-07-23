@@ -7,6 +7,8 @@ public class Metronome : MonoBehaviour {
 
     public MidiController controller;
     public MIDIPlayer player;
+	public Text bpmLabel;
+	public string bpmLabelSuffix = "BPM";
     private float mouvement;
     private Scrollbar metronome;
     private int direction;
@@ -32,6 +34,10 @@ public class Metronome : MonoBehaviour {
         if (metronome.localPosition.x - mouvement < -0.45f && 0.45f + metronome.localPosition.x > 0.01f)
             mouvement = 0.45f + metronome.localPosition.x;
 		*/
+
+		if (bpmLabel != null) {
+			bpmLabel.text = player.targetTempo + " " + bpmLabelSuffix;
+		}
 
         //Change la direction du metronome aux limites
 		if (metronome.value >= 1f)
