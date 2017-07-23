@@ -11,6 +11,7 @@ public class MidiController : MonoBehaviour {
 	public const float LONG_PAUSE_MINIMUM_DURATION = 0.3f;
 
 	public ThalmicMyo thalmicMyo;
+    public MIDIPlayer player;
 
 	private bool mouseWasDown = false;
 	private float lastTime = 0.0f;
@@ -37,13 +38,13 @@ public class MidiController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		maxMagnitude = 0;
-	}
+        player = GetComponent<MIDIPlayer>();
+    }
 	
 	// Update is called once per frame
 	void Update () {
 		if (thalmicMyo.arm == Thalmic.Myo.Arm.Unknown) return; // Ignore input if myo is not being worn
 
-		MIDIPlayer player = GetComponent<MIDIPlayer>();
 		Vector2 gyroXY = (Vector2) thalmicMyo.gyroscope;
 		bool updateTempo = false;
 
