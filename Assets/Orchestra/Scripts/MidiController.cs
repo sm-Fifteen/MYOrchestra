@@ -31,6 +31,7 @@ public class MidiController : MonoBehaviour {
 
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 		Vector2 gyroXY = (Vector2) thalmicMyo.gyroscope;
+		float deltaTime = Time.time - lastTime;
 
 		// We expect a movement in a certain direction (supposing a 4:4 time signature)
 		// We look for a movement down/left/right/up (in that order) and register a beat when that movement ends
@@ -42,7 +43,7 @@ public class MidiController : MonoBehaviour {
 			// To avoid false positives, we ignore readings where the target component is not the largest of the two
 			// Nothing, early exit
 		} else if (movingInTheRightDirection) {
-			if (componentValue < 0) {
+			if (componentValue < 0 && deltaTime > MINIMUM_MOVEMENT_TIME) {
 				// No longer moving in the right direction
 				movingInTheRightDirection = false;
 				updateTempo();
@@ -58,13 +59,12 @@ public class MidiController : MonoBehaviour {
 				movingInTheRightDirection = true;
 			}
 		}
-
-		/*
-		if ((Time.time - lastTime) > LONG_PAUSE_MINIMUM_DURATION) {
+			
+		if (deltaTime > LONG_PAUSE_MINIMUM_DURATION) {
+			// Let the wind out of the orchestra
 			// TODO : Pause immediately if hand is raised
-			player.currentTempo = (uint)(60 / (Time.time - lastTime));
+			player.currentTempo = (uint)(60 / deltaTime);
 		}
-		*/
 
 		/*
 		if (Input.GetKey ("v")) {
@@ -112,7 +112,6 @@ public class MidiController : MonoBehaviour {
 	}
 
 	private uint updateTempo() {
-		if ((Time.time - lastTime) < MINIMUM_MOVEMENT_TIME) return 0;
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 
 		if (lastTime > 0) {
