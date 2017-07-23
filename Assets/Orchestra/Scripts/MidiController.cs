@@ -30,13 +30,14 @@ public class MidiController : MonoBehaviour {
 	private Pose _lastPose = Pose.Unknown;
 
 	private float maxMagnitude;
-	private Vector2 lastDirection = Vector2.zero;
-	private bool alreadyPausing = false;
+	private bool movingInTheRightDirection = false;
+	private Vector2 expectedMovement;
 
 
 	// Use this for initialization
 	void Start () {
 		maxMagnitude = 0;
+		expectedMovement = Vector2.down;
 	}
 	
 	// Update is called once per frame
@@ -45,24 +46,58 @@ public class MidiController : MonoBehaviour {
 
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 		Vector2 gyroXY = (Vector2) thalmicMyo.gyroscope;
-		bool updateTempo = false;
 
-		// Has direction changed or movement paused?
-		float angleDiff = Vector2.Angle(gyroXY.normalized, lastDirection);
-		Debug.Log("Angle diff : " + angleDiff);
+		// We expect a movement in a certain direction (supposing a 4:4 time signature)
+		// We look for a movement down/left/right/up (in that order) and register a beat when that movement ends
+		// (That is, when the vector component is no longer present)
 
+		float componentValue = Vector2.Dot (gyroXY, expectedMovement);
+
+		if (movingInTheRightDirection) {
+			if (componentValue < 0) {
+				// No longer moving in the right direction
+				movingInTheRightDirection = false;
+				updateTempo();
+				expectedMovement = nextMovement (thalmicMyo.arm);
+			} else {
+				// Still moving in the right direction
+				maxMagnitude = Mathf.Max(maxMagnitude, componentValue);
+			}
+		} else {
+			if (componentValue > MOVEMENT_SPEED_THRESH) {
+				movingInTheRightDirection = true;
+			}
+		}
+
+		/*
+		if ((Time.time - lastTime) > LONG_PAUSE_MINIMUM_DURATION) {
+			// TODO : Pause immediately if hand is raised
+			player.currentTempo = (uint)(60 / (Time.time - lastTime));
+		}
+		*/
+
+		/*
+		if (Input.GetKey ("v")) {
+
+			if (Input.GetAxis ("Mouse X") < 0) {
+				player.velocityScale = player.velocityScale - 0.02f;
+				if (player.velocityScale < 0)
+					player.velocityScale = 0;
+			}
+			if (Input.GetAxis ("Mouse X") > 0) {
+				player.velocityScale = player.velocityScale + 0.02f;
+				if (player.velocityScale > 2)
+					player.velocityScale = 2;
+			}
+		}
+		*/
+
+		/*******************************************************/
+		/*
 		if (gyroXY.magnitude > MOVEMENT_SPEED_THRESH) {
-			/* Angle variation only works if you'Re doing 8 motions, which is kinda ~~ */
-            //if (angleDiff > MOVEMENT_ANGLE_THRESH) {
-            //    // Angle has changed drastically with or without a significant pause
-            //    Debug.Log("Angle change");
-			//	lastDirection = gyroXY.normalized;
-            //    updateTempo = true;
-            //} else {
-                // Regular movement
-                maxMagnitude = Mathf.Max(maxMagnitude, gyroXY.magnitude);
-                alreadyPausing = false;
-            //}
+            // Regular movement
+            maxMagnitude = Mathf.Max(maxMagnitude, gyroXY.magnitude);
+            alreadyPausing = false;
 		} else if (!alreadyPausing) {
 			// Movement has stopped (and wasn't stopping before)
 			Debug.Log("Paused");
@@ -84,8 +119,7 @@ public class MidiController : MonoBehaviour {
 			// TODO : Pause immediately if hand is raised
 			player.currentTempo = (uint)(60 / (Time.time - lastTime));
 		}
-
-		lastDirection = gyroXY.normalized;
+		*/
 
 		/*
 		if (Input.GetKey ("v")) {
@@ -103,5 +137,49 @@ public class MidiController : MonoBehaviour {
 		}
 		*/
 
+	}
+
+	private Vector2 nextMovement(Thalmic.Myo.Arm conductingArm) {
+		if (expectedMovement == Vector2.up) {
+			// Current is up (4th), next is down (1st)
+			return Vector2.down;
+		} else if (expectedMovement == Vector2.down && conductingArm == Thalmic.Myo.Arm.Right) {
+			// (Right handed) Current is down (1st), next is inwards (2nd)
+			return Vector2.left;
+		} else if (expectedMovement == Vector2.down && conductingArm == Thalmic.Myo.Arm.Left) {
+			// (Left handed) Current is down (1st), next is inwards (2nd)
+			return Vector2.right;
+		} else if (expectedMovement == Vector2.left && conductingArm == Thalmic.Myo.Arm.Right) {
+			// (Right handed) Current is inwards (2nd), next is outwards (3rd)
+			return Vector2.right;
+		} else if (expectedMovement == Vector2.right && conductingArm == Thalmic.Myo.Arm.Left) {
+			// (Left handed) Current is inwards (2nd), next is outwards (3rd)
+			return Vector2.left;
+		} else if (expectedMovement == Vector2.right && conductingArm == Thalmic.Myo.Arm.Right) {
+			// (Right handed) Current is outwards (3rd), next is up (4th)
+			return Vector2.up;
+		} else if (expectedMovement == Vector2.left && conductingArm == Thalmic.Myo.Arm.Left) {
+			// (Left handed) Current is outwards (3rd), next is up (4th)
+			return Vector2.up;
+		} else {
+			// Fallback case, I guess...
+			return Vector2.down;
+		}
+	}
+
+	private uint updateTempo() {
+		if ((Time.time - lastTime) < MINIMUM_MOVEMENT_TIME) return 0;
+		MIDIPlayer player = GetComponent<MIDIPlayer>();
+
+		if (lastTime > 0) {
+			Debug.LogWarning (Time.time - lastTime);
+
+			uint newTempo = (uint)(60 / (Time.time - lastTime));
+			player.currentTempo = newTempo;
+			thalmicMyo.Vibrate (Thalmic.Myo.VibrationType.Short);
+		}
+
+		lastTime = Time.time;
+		return player.currentTempo;
 	}
 }
