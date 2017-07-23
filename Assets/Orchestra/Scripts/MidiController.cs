@@ -5,8 +5,8 @@ using UnityEngine;
 using Pose = Thalmic.Myo.Pose;
 
 public class MidiController : MonoBehaviour {
-	public const float MOVEMENT_SPEED_THRESH = 60; //Degrees per sec
-	public const float MOVEMENT_ANGLE_THRESH = 10; //Degrees??
+	public const float START_MOVEMENT_SPEED_THRESH = 60; //Degrees per sec
+
 	public const float MINIMUM_MOVEMENT_TIME = 0.2f;
 	public const float LONG_PAUSE_MINIMUM_DURATION = 0.3f;
 
@@ -31,7 +31,7 @@ public class MidiController : MonoBehaviour {
 
 	private float maxMagnitude;
 	private bool movingInTheRightDirection = false;
-	private Vector2 expectedMovement;
+	public Vector2 expectedMovement;
 
 
 	// Use this for initialization
@@ -53,18 +53,23 @@ public class MidiController : MonoBehaviour {
 
 		float componentValue = Vector2.Dot (gyroXY, expectedMovement);
 
-		if (movingInTheRightDirection) {
+		if (Mathf.Abs (Vector2.Dot (gyroXY.normalized, expectedMovement)) < 0.5) {
+			// To avoid false positives, we ignore readings where the target component is not the largest of the two
+			// Nothing, early exit
+		} else if (movingInTheRightDirection) {
 			if (componentValue < 0) {
 				// No longer moving in the right direction
 				movingInTheRightDirection = false;
 				updateTempo();
 				expectedMovement = nextMovement (thalmicMyo.arm);
+
+				Debug.Log (gyroXY.ToString());
 			} else {
 				// Still moving in the right direction
-				maxMagnitude = Mathf.Max(maxMagnitude, componentValue);
+				maxMagnitude = Mathf.Max(maxMagnitude, gyroXY.magnitude);
 			}
 		} else {
-			if (componentValue > MOVEMENT_SPEED_THRESH) {
+			if (componentValue > START_MOVEMENT_SPEED_THRESH) {
 				movingInTheRightDirection = true;
 			}
 		}
