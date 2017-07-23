@@ -17,13 +17,15 @@ public class MidiController : MonoBehaviour {
 
 	private float lastTime = 0.0f;
 
-	private float maxMagnitude;
+	private float magnitudeSum;
+	private int magnitudeCount;
 	private bool movingInTheRightDirection = false;
 
 
 	// Use this for initialization
 	void Start () {
-		maxMagnitude = 0;
+		magnitudeSum = 0;
+		magnitudeCount = 0;
 		expectedMovement = getMovementDirection(beatCounter);
 	}
 	
@@ -49,14 +51,20 @@ public class MidiController : MonoBehaviour {
 			if (componentValue < 0 && deltaTime > MINIMUM_MOVEMENT_TIME) {
 				// No longer moving in the right direction
 				movingInTheRightDirection = false;
-				updateTempoAndVelocity();
-				Debug.Log (maxMagnitude);
-				maxMagnitude = 0;
+				updateTempo();
+
+				float averageMagnitude = magnitudeSum / magnitudeCount;
+				magnitudeSum = 0;
+				magnitudeCount = 0;
+				updateVelocity(averageMagnitude);
+				Debug.Log (averageMagnitude);
+
 				beatCounter++;
 				expectedMovement = getMovementDirection(beatCounter);
 			} else {
 				// Still moving in the right direction
-				maxMagnitude = Mathf.Max(maxMagnitude, gyroXY.magnitude);
+				magnitudeSum += gyroXY.magnitude;
+				magnitudeCount++;
 			}
 		} else {
 			if (componentValue > START_MOVEMENT_SPEED_THRESH) {
@@ -110,7 +118,7 @@ public class MidiController : MonoBehaviour {
 		UP
 	}
 
-	private uint updateTempoAndVelocity() {
+	private uint updateTempo() {
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 
 		if (lastTime > 0) {
@@ -118,11 +126,16 @@ public class MidiController : MonoBehaviour {
 
 			uint newTempo = (uint)(60 / (Time.time - lastTime));
 			player.currentTempo = newTempo;
-			player.velocityScale = maxMagnitude / VELOCITY_TO_MAGNITUDE_SCALE;
 			thalmicMyo.Vibrate (Thalmic.Myo.VibrationType.Short);
 		}
 
 		lastTime = Time.time;
 		return player.currentTempo;
+	}
+
+	private float updateVelocity(float averageMagnitude) {
+		MIDIPlayer player = GetComponent<MIDIPlayer>();
+		player.velocityScale = averageMagnitude / VELOCITY_TO_MAGNITUDE_SCALE;
+		return player.velocityScale;
 	}
 }
