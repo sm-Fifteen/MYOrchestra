@@ -11,7 +11,8 @@ public class MidiController : MonoBehaviour {
 	public const float LONG_PAUSE_MINIMUM_DURATION = 0.3f;
 
 	public ThalmicMyo thalmicMyo;
-	public Vector2 expectedMovement;
+	private int beatCounter = 0;
+	public MovementDirection expectedMovement;
 
 	private float lastTime = 0.0f;
 
@@ -22,7 +23,7 @@ public class MidiController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		maxMagnitude = 0;
-		expectedMovement = Vector2.down;
+		expectedMovement = getMovementDirection(beatCounter);
 	}
 	
 	// Update is called once per frame
@@ -31,15 +32,16 @@ public class MidiController : MonoBehaviour {
 
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 		Vector2 gyroXY = (Vector2) thalmicMyo.gyroscope;
+		Vector2 expectedMovementVector = movementToVector (expectedMovement, thalmicMyo.arm);
 		float deltaTime = Time.time - lastTime;
 
 		// We expect a movement in a certain direction (supposing a 4:4 time signature)
 		// We look for a movement down/left/right/up (in that order) and register a beat when that movement ends
 		// (That is, when the vector component is no longer present)
 
-		float componentValue = Vector2.Dot (gyroXY, expectedMovement);
+		float componentValue = Vector2.Dot (gyroXY, expectedMovementVector);
 
-		if (Mathf.Abs (Vector2.Dot (gyroXY.normalized, expectedMovement)) < 0.5) {
+		if (Mathf.Abs (Vector2.Dot (gyroXY.normalized, expectedMovementVector)) < 0.5) {
 			// To avoid false positives, we ignore readings where the target component is not the largest of the two
 			// Nothing, early exit
 		} else if (movingInTheRightDirection) {
@@ -47,7 +49,8 @@ public class MidiController : MonoBehaviour {
 				// No longer moving in the right direction
 				movingInTheRightDirection = false;
 				updateTempo();
-				expectedMovement = nextMovement (thalmicMyo.arm);
+				beatCounter++;
+				expectedMovement = getMovementDirection(beatCounter);
 
 				Debug.Log (gyroXY.ToString());
 			} else {
@@ -83,32 +86,41 @@ public class MidiController : MonoBehaviour {
 		*/
 	}
 
-	private Vector2 nextMovement(Thalmic.Myo.Arm conductingArm) {
-		if (expectedMovement == Vector2.up) {
-			// Current is up (4th), next is down (1st)
-			return Vector2.down;
-		} else if (expectedMovement == Vector2.down && conductingArm == Thalmic.Myo.Arm.Right) {
-			// (Right handed) Current is down (1st), next is inwards (2nd)
-			return Vector2.left;
-		} else if (expectedMovement == Vector2.down && conductingArm == Thalmic.Myo.Arm.Left) {
-			// (Left handed) Current is down (1st), next is inwards (2nd)
-			return Vector2.right;
-		} else if (expectedMovement == Vector2.left && conductingArm == Thalmic.Myo.Arm.Right) {
-			// (Right handed) Current is inwards (2nd), next is outwards (3rd)
-			return Vector2.right;
-		} else if (expectedMovement == Vector2.right && conductingArm == Thalmic.Myo.Arm.Left) {
-			// (Left handed) Current is inwards (2nd), next is outwards (3rd)
-			return Vector2.left;
-		} else if (expectedMovement == Vector2.right && conductingArm == Thalmic.Myo.Arm.Right) {
-			// (Right handed) Current is outwards (3rd), next is up (4th)
-			return Vector2.up;
-		} else if (expectedMovement == Vector2.left && conductingArm == Thalmic.Myo.Arm.Left) {
-			// (Left handed) Current is outwards (3rd), next is up (4th)
-			return Vector2.up;
-		} else {
+	private static MovementDirection getMovementDirection(int movementIdx, uint movementsPerCycle = 4) {
+		uint movementNum = (uint)(movementIdx % movementsPerCycle);
+
+		switch (movementNum) {
+			case 0: return MovementDirection.DOWN;
+			case 1: return MovementDirection.INWARDS;
+			case 2: return MovementDirection.OUTWARDS;
+			case 3: return MovementDirection.UP;
 			// Fallback case, I guess...
-			return Vector2.down;
+			default: return MovementDirection.DOWN;
 		}
+	}
+
+	private static Vector2 movementToVector(MovementDirection movement, Thalmic.Myo.Arm conductingArm) {
+		if (conductingArm == Thalmic.Myo.Arm.Unknown) return Vector2.zero;
+
+		switch (movement) {
+			case MovementDirection.DOWN:
+				return Vector2.down;
+			case MovementDirection.INWARDS:
+				return (conductingArm == Thalmic.Myo.Arm.Right) ? Vector2.left : Vector2.right;
+			case MovementDirection.OUTWARDS:
+				return (conductingArm == Thalmic.Myo.Arm.Right) ? Vector2.right : Vector2.left;
+			case MovementDirection.UP:
+				return Vector2.up;
+			default:
+				return Vector2.zero;
+		}
+	}
+
+	public enum MovementDirection {
+		DOWN,
+		INWARDS,
+		OUTWARDS,
+		UP
 	}
 
 	private uint updateTempo() {
