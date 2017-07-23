@@ -9,6 +9,7 @@ public class MidiController : MonoBehaviour {
 
 	public const float MINIMUM_MOVEMENT_TIME = 0.2f;
 	public const float LONG_PAUSE_MINIMUM_DURATION = 0.3f;
+	public const float VELOCITY_TO_MAGNITUDE_SCALE = 200f;
 
 	public ThalmicMyo thalmicMyo;
 	private int beatCounter = 0;
@@ -48,11 +49,11 @@ public class MidiController : MonoBehaviour {
 			if (componentValue < 0 && deltaTime > MINIMUM_MOVEMENT_TIME) {
 				// No longer moving in the right direction
 				movingInTheRightDirection = false;
-				updateTempo();
+				updateTempoAndVelocity();
+				Debug.Log (maxMagnitude);
+				maxMagnitude = 0;
 				beatCounter++;
 				expectedMovement = getMovementDirection(beatCounter);
-
-				Debug.Log (gyroXY.ToString());
 			} else {
 				// Still moving in the right direction
 				maxMagnitude = Mathf.Max(maxMagnitude, gyroXY.magnitude);
@@ -63,25 +64,11 @@ public class MidiController : MonoBehaviour {
 			}
 		}
 			
+		/*
 		if (deltaTime > LONG_PAUSE_MINIMUM_DURATION) {
 			// Let the wind out of the orchestra
 			// TODO : Pause immediately if hand is raised
 			player.currentTempo = (uint)(60 / deltaTime);
-		}
-
-		/*
-		if (Input.GetKey ("v")) {
-
-			if (Input.GetAxis ("Mouse X") < 0) {
-				player.velocityScale = player.velocityScale - 0.02f;
-				if (player.velocityScale < 0)
-					player.velocityScale = 0;
-			}
-			if (Input.GetAxis ("Mouse X") > 0) {
-				player.velocityScale = player.velocityScale + 0.02f;
-				if (player.velocityScale > 2)
-					player.velocityScale = 2;
-			}
 		}
 		*/
 	}
@@ -123,14 +110,15 @@ public class MidiController : MonoBehaviour {
 		UP
 	}
 
-	private uint updateTempo() {
+	private uint updateTempoAndVelocity() {
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 
 		if (lastTime > 0) {
-			Debug.LogWarning (Time.time - lastTime);
+			//Debug.LogWarning (Time.time - lastTime);
 
 			uint newTempo = (uint)(60 / (Time.time - lastTime));
 			player.currentTempo = newTempo;
+			player.velocityScale = maxMagnitude / VELOCITY_TO_MAGNITUDE_SCALE;
 			thalmicMyo.Vibrate (Thalmic.Myo.VibrationType.Short);
 		}
 
