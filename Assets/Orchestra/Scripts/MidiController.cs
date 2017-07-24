@@ -14,6 +14,7 @@ public class MidiController : MonoBehaviour {
 	public ThalmicMyo thalmicMyo;
 	private int beatCounter = 0;
 	public MovementDirection expectedMovement;
+	public MovementIndicator movementIndicator;
 
 	private float lastTime = 0.0f;
 
@@ -32,6 +33,7 @@ public class MidiController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (thalmicMyo.arm == Thalmic.Myo.Arm.Unknown) return; // Ignore input if myo is not being worn
+		movementIndicator.setArm(thalmicMyo.arm);
 
 		MIDIPlayer player = GetComponent<MIDIPlayer>();
 		Vector2 gyroXY = (Vector2) thalmicMyo.gyroscope;
@@ -61,6 +63,7 @@ public class MidiController : MonoBehaviour {
 
 				beatCounter++;
 				expectedMovement = getMovementDirection(beatCounter);
+				movementIndicator.showMovement(expectedMovement);
 			} else {
 				// Still moving in the right direction
 				magnitudeSum += gyroXY.magnitude;
