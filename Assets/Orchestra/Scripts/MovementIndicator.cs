@@ -39,16 +39,10 @@ public class MovementIndicator : MonoBehaviour {
 		RectTransform transform = GetComponent<RectTransform> ();
 
 		if (conductingArm == Thalmic.Myo.Arm.Left) {
-			// Aligned left, mirrored
-			transform.anchorMax = new Vector2(0f, 0.5f);
-			transform.anchorMin = new Vector2(0f, 0.5f);
-			transform.pivot = new Vector2(0f, 0.5f);
+			// Mirrored
 			transform.localScale = imageScaling * new Vector2(-1f, 1f);
 		} else {
-			// Aligned right, not mirrored
-			transform.anchorMax = new Vector2(1f, 0.5f);
-			transform.anchorMin = new Vector2(1f, 0.5f);
-			transform.pivot = new Vector2(1f, 0.5f);
+			// Not mirrored
 			transform.localScale = imageScaling * new Vector2(1f, 1f);
 		}
 	}
