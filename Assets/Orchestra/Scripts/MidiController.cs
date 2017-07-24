@@ -22,6 +22,9 @@ public class MidiController : MonoBehaviour {
 	private int magnitudeCount;
 	private bool movingInTheRightDirection = false;
 
+	public delegate void DownMovement ();
+	public static event DownMovement onDownMovement;
+
 
 	// Use this for initialization
 	void Start () {
@@ -53,13 +56,16 @@ public class MidiController : MonoBehaviour {
 			if (componentValue < 0 && deltaTime > MINIMUM_MOVEMENT_TIME) {
 				// No longer moving in the right direction
 				movingInTheRightDirection = false;
-				updateTempo();
+				updateTempo ();
 
 				float averageMagnitude = magnitudeSum / magnitudeCount;
 				magnitudeSum = 0;
 				magnitudeCount = 0;
-				updateVelocity(averageMagnitude);
+				updateVelocity (averageMagnitude);
 				Debug.Log (averageMagnitude);
+
+				// So the Virtual arm can reset itself
+				if (expectedMovement == MovementDirection.DOWN && onDownMovement != null) onDownMovement();
 
 				beatCounter++;
 				expectedMovement = getMovementDirection(beatCounter);
