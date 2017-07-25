@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UI;
@@ -9,12 +10,12 @@ public class MenuButton : MonoBehaviour {
 	private Text songNameUI;
 	private Text songComposerUI;
 
-	public string midiPath {
+	public FileInfo midiPath {
 		get {
 			return _midiPath;
 		}
 		set {
-			string[] pathParts = value.Split(new string[]{"_-_"}, System.StringSplitOptions.RemoveEmptyEntries);
+			string[] pathParts = value.Name.Split(new string[]{"_-_"}, System.StringSplitOptions.RemoveEmptyEntries);
 			switch (pathParts.Length) {
 				case 2:
 					songComposer = pathParts [1];
@@ -26,7 +27,7 @@ public class MenuButton : MonoBehaviour {
 			_midiPath = value;
 		}
 	}
-	private string _midiPath = "";
+	private FileInfo _midiPath;
 	public string songName = "";
 	public string songComposer = "";
 

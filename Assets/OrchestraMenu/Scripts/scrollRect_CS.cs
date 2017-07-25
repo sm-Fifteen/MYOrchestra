@@ -6,36 +6,50 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class scrollRect_CS : MonoBehaviour {
-    public RectTransform panel; //ScroolPanel
-
-    public Button[] btn;
     public RectTransform center;
+	public GameObject btnPrefab;
+	[RangeAttribute(0, 1000)] public float btnDistance = 300;
+	private RectTransform panel;
 
     public float[] distance;
     public float[] distanceRepo;
     private bool dragging = false; //true = drag
-    private int btnDistance;
+	private Button[] btn;
     private int minButtonNum;
     private int btnLenght;
+
+	void Awake(){
+		DirectoryInfo dir = new DirectoryInfo("Assets/Resources/Music_menu/");
+		FileInfo[] fichiers = dir.GetFiles();
+
+		List<String> list = new List<String>();
+
+		foreach (FileInfo fichier in fichiers) {
+			if (fichier.Extension != ".mid") continue;
+
+			GameObject btnObject = Instantiate(btnPrefab) as GameObject;
+			btnObject.transform.SetParent(transform);
+			btnObject.GetComponent<MenuButton>().midiPath = fichier;
+		}
+
+		btn = GetComponentsInChildren<Button> ();
+		panel = GetComponentInParent<RectTransform> ();
+	}
 
     void Start(){
         DirectoryInfo dir = new DirectoryInfo("Assets/Resources/Music_menu/");
         FileInfo[] fichiers = dir.GetFiles();
 
-        List<String> list = new List<String>();
-
-        foreach (FileInfo fichier in fichiers)
-        {
-
-            list.Add(fichier.Name.ToString());
-        }
+		for(int i = 0; i < btn.Length; i++){
+			Button button = btn [i];
+			Vector2 positionOffset = new Vector2 (i * btnDistance, 0);
+			Vector2 newPosition = center.GetComponent<RectTransform> ().anchoredPosition + positionOffset;
+			button.GetComponent<RectTransform> ().anchoredPosition = newPosition;
+		}
 
         btnLenght = btn.Length;
         distance = new float[btnLenght];
         distanceRepo = new float[btnLenght];
-
-        btnDistance = (int)Mathf.Abs(btn[1].GetComponent<RectTransform>().anchoredPosition.x - btn[0].GetComponent<RectTransform>().anchoredPosition.x);
-  
     }
 
     void Update(){
