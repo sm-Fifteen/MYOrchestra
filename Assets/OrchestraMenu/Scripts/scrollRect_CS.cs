@@ -29,7 +29,9 @@ public class scrollRect_CS : MonoBehaviour {
 
 			GameObject btnObject = Instantiate(btnPrefab) as GameObject;
 			btnObject.transform.SetParent(transform);
+
 			btnObject.GetComponent<MenuButton>().midiPath = fichier;
+			btnObject.GetComponent<MenuButton> ().getMetadataFromFile(fichier);
 		}
 
 		btn = GetComponentsInChildren<Button> ();

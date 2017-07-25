@@ -10,24 +10,7 @@ public class MenuButton : MonoBehaviour {
 	private Text songNameUI;
 	private Text songComposerUI;
 
-	public FileInfo midiPath {
-		get {
-			return _midiPath;
-		}
-		set {
-			string[] pathParts = value.Name.Split(new string[]{"_-_"}, System.StringSplitOptions.RemoveEmptyEntries);
-			switch (pathParts.Length) {
-				case 2:
-					songComposer = pathParts [1];
-					goto case 1; // Fallthrough
-				case 1:
-					songName = pathParts [0];
-					break;
-			}
-			_midiPath = value;
-		}
-	}
-	private FileInfo _midiPath;
+	public FileInfo midiPath;
 	public string songName = "";
 	public string songComposer = "";
 
@@ -43,8 +26,26 @@ public class MenuButton : MonoBehaviour {
 
 	// Use this for initialization
 	void OnValidate () {
+		updateText ();
+	}
+
+	private void updateText() {
 		if (!songComposerUI || !songNameUI) Reset ();
 		songNameUI.text = songName;
 		songComposerUI.text = songComposer;
+	}
+
+	public void getMetadataFromFile(FileInfo file) {
+		string fileName = Path.GetFileNameWithoutExtension (file.Name);
+		string[] pathParts = fileName.Split(new string[]{"_-_"}, System.StringSplitOptions.RemoveEmptyEntries);
+
+		if (pathParts.Length == 2) {
+			songComposer = pathParts [0].Replace("_", " ");
+			songName = pathParts [1].Replace("_", " ");
+		} else {
+			songName = pathParts [0].Replace("_", " ");
+		}
+
+		updateText ();
 	}
 }
