@@ -5,6 +5,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
+[ExecuteInEditMode]
 public class scrollRect_CS : MonoBehaviour {
     public RectTransform center;
 	public GameObject btnPrefab;
@@ -14,7 +15,7 @@ public class scrollRect_CS : MonoBehaviour {
     public float[] distance;
     public float[] distanceRepo;
     private bool dragging = false; //true = drag
-	private Button[] btn;
+	private Button[] btn = new Button[0];
     private int minButtonNum;
     private int btnLenght;
 
@@ -39,20 +40,16 @@ public class scrollRect_CS : MonoBehaviour {
 	}
 
     void Start(){
-        DirectoryInfo dir = new DirectoryInfo("Assets/Resources/Music_menu/");
-        FileInfo[] fichiers = dir.GetFiles();
-
-		for(int i = 0; i < btn.Length; i++){
-			Button button = btn [i];
-			Vector2 positionOffset = new Vector2 (i * btnDistance, 0);
-			Vector2 newPosition = center.GetComponent<RectTransform> ().anchoredPosition + positionOffset;
-			button.GetComponent<RectTransform> ().anchoredPosition = newPosition;
-		}
+		updateButtonDistance();
 
         btnLenght = btn.Length;
         distance = new float[btnLenght];
         distanceRepo = new float[btnLenght];
     }
+
+	void OnValidate() {
+		updateButtonDistance();
+	}
 
     void Update(){
         for (int i = 0; i < btn.Length; i++) {
@@ -106,4 +103,13 @@ public class scrollRect_CS : MonoBehaviour {
     public void EndDrag(){
         dragging = false;
     }
+
+	private void updateButtonDistance() {
+		for(int i = 0; i < btn.Length; i++){
+			Button button = btn [i];
+			Vector2 positionOffset = new Vector2 (i * btnDistance, 0);
+			Vector2 newPosition = center.GetComponent<RectTransform> ().anchoredPosition + positionOffset;
+			button.GetComponent<RectTransform> ().anchoredPosition = newPosition;
+		}
+	}
 }
