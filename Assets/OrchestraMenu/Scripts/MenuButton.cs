@@ -10,7 +10,7 @@ public class MenuButton : MonoBehaviour {
 	private Text songNameUI;
 	private Text songComposerUI;
 
-	public FileInfo midiPath;
+	public string midiPath = "";
 	public string songName = "";
 	public string songComposer = "";
 
@@ -29,14 +29,15 @@ public class MenuButton : MonoBehaviour {
 	}
 
 	void LoadSong() {
-		if (midiPath == null) {
+		if (midiPath == "") {
 			Debug.LogError ("No song is mapped to that button");
 			return;
-		} else if (!midiPath.Exists) {
+		} else if (!File.Exists(midiPath)) {
 			Debug.LogError ("Song does not exist");
+			return;
 		}
 			
-		LoadGame.setSongFile(midiPath);
+		LoadGame.setSongPath(midiPath);
 		LoadGame.LoadScene("Orchestra/Main Scene");
 	}
 

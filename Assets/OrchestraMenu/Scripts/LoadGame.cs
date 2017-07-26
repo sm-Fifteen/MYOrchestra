@@ -7,14 +7,14 @@ using UnityEngine.SceneManagement;
 public class LoadGame : MonoBehaviour {
 
 	//public GameObject loadingImage;
-	private static FileInfo songFile;
+	private static string songPath = "";
 
-	public static void setSongFile(FileInfo file) {
-		songFile = file;
+	public static void setSongPath(string filePath) {
+		songPath = filePath;
 	}
 
-	public static FileInfo getSongFile() {
-		return songFile;
+	public static string getSongPath() {
+		return songPath;
 	}
 
     public static void LoadScene(string level)

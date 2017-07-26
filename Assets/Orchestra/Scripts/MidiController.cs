@@ -29,9 +29,9 @@ public class MidiController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		FileInfo midiFile = LoadGame.getSongFile ();
+		string midiFile = LoadGame.getSongPath ();
 		MIDIPlayer player = GetComponent<MIDIPlayer> ();
-		if (midiFile != null) player.midiFilePath = midiFile.ToString ();
+		if (midiFile != "") player.midiFilePath = midiFile;
 
 		magnitudeSum = 0;
 		magnitudeCount = 0;
