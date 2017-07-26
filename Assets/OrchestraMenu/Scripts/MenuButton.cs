@@ -14,6 +14,10 @@ public class MenuButton : MonoBehaviour {
 	public string songName = "";
 	public string songComposer = "";
 
+	void Start() {
+		GetComponent<Button> ().onClick.AddListener (LoadSong);
+	}
+
 	void Reset () {
 		foreach (Text textElement in GetComponentsInChildren<Text>()) {
 			if (textElement.CompareTag ("SongName")) {
@@ -22,6 +26,18 @@ public class MenuButton : MonoBehaviour {
 				songComposerUI = textElement;
 			}
 		}
+	}
+
+	void LoadSong() {
+		if (midiPath == null) {
+			Debug.LogError ("No song is mapped to that button");
+			return;
+		} else if (!midiPath.Exists) {
+			Debug.LogError ("Song does not exist");
+		}
+			
+		LoadGame.setSongFile(midiPath);
+		LoadGame.LoadScene("Orchestra/Main Scene");
 	}
 
 	// Use this for initialization

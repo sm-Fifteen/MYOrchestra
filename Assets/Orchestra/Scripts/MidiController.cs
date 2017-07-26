@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 using Pose = Thalmic.Myo.Pose;
@@ -28,6 +29,10 @@ public class MidiController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		FileInfo midiFile = LoadGame.getSongFile ();
+		MIDIPlayer player = GetComponent<MIDIPlayer> ();
+		if (midiFile != null) player.midiFilePath = midiFile.ToString ();
+
 		magnitudeSum = 0;
 		magnitudeCount = 0;
 		expectedMovement = getMovementDirection(beatCounter);

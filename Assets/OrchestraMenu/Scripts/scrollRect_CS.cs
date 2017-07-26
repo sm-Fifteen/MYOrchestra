@@ -10,16 +10,15 @@ public class scrollRect_CS : MonoBehaviour {
     public RectTransform center;
 	public GameObject btnPrefab;
 	[RangeAttribute(0, 1000)] public float btnDistance = 300;
-	private RectTransform panel;
 
-    public float[] distance;
-    public float[] distanceRepo;
     private bool dragging = false; //true = drag
-	private Button[] btn = new Button[0];
     private int minButtonNum;
-    private int btnLenght;
 
-	void Awake(){
+	void refreshButtonList() {
+		foreach(Button button in GetComponentsInChildren<Button>()){
+			DestroyImmediate(button.gameObject);
+		}
+
 		DirectoryInfo dir = new DirectoryInfo("Assets/Resources/Music_menu/");
 		FileInfo[] fichiers = dir.GetFiles();
 
@@ -34,24 +33,24 @@ public class scrollRect_CS : MonoBehaviour {
 			btnObject.GetComponent<MenuButton>().midiPath = fichier;
 			btnObject.GetComponent<MenuButton> ().getMetadataFromFile(fichier);
 		}
-
-		btn = GetComponentsInChildren<Button> ();
-		panel = GetComponentInParent<RectTransform> ();
 	}
 
     void Start(){
 		updateButtonDistance();
-
-        btnLenght = btn.Length;
-        distance = new float[btnLenght];
-        distanceRepo = new float[btnLenght];
     }
 
 	void OnValidate() {
-		updateButtonDistance();
+		UnityEditor.EditorApplication.delayCall+=()=>{
+			refreshButtonList ();
+			updateButtonDistance();
+		};
 	}
 
     void Update(){
+		Button[] btn = GetComponentsInChildren<Button> ();
+		float[] distance = new float[btn.Length];
+		float[] distanceRepo = new float[btn.Length];
+
         for (int i = 0; i < btn.Length; i++) {
             distanceRepo[i] = center.GetComponent<RectTransform>().position.x - btn[i].GetComponent<RectTransform>().position.x;
             distance[i] = Mathf.Abs(distanceRepo[i]);
@@ -60,7 +59,7 @@ public class scrollRect_CS : MonoBehaviour {
                 float curX = btn[i].GetComponent<RectTransform>().anchoredPosition.x;
                 float curY = btn[i].GetComponent<RectTransform>().anchoredPosition.y;
 
-                Vector2 newAnchoredPos = new Vector2(curX + (btnLenght * btnDistance), curY);
+				Vector2 newAnchoredPos = new Vector2(curX + (btn.Length * btnDistance), curY);
                 btn[i].GetComponent<RectTransform>().anchoredPosition = newAnchoredPos;
             }
 
@@ -69,7 +68,7 @@ public class scrollRect_CS : MonoBehaviour {
                 float curX = btn[i].GetComponent<RectTransform>().anchoredPosition.x;
                 float curY = btn[i].GetComponent<RectTransform>().anchoredPosition.y;
 
-                Vector2 newAnchoredPos = new Vector2(curX - (btnLenght * btnDistance), curY);
+				Vector2 newAnchoredPos = new Vector2(curX - (btn.Length * btnDistance), curY);
                 btn[i].GetComponent<RectTransform>().anchoredPosition = newAnchoredPos;
             }
         }
@@ -90,6 +89,7 @@ public class scrollRect_CS : MonoBehaviour {
     }
 
     void LerpToBtn(float position) {
+		RectTransform panel = GetComponentInParent<RectTransform> ();
         float newX = Mathf.Lerp(panel.anchoredPosition.x, position, Time.deltaTime * 2.5f);
         Vector2 newPosition = new Vector2(newX, panel.anchoredPosition.y);
 
@@ -105,6 +105,8 @@ public class scrollRect_CS : MonoBehaviour {
     }
 
 	private void updateButtonDistance() {
+		Button[] btn = GetComponentsInChildren<Button> ();
+
 		for(int i = 0; i < btn.Length; i++){
 			Button button = btn [i];
 			Vector2 positionOffset = new Vector2 (i * btnDistance, 0);
