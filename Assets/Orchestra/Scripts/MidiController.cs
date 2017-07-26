@@ -31,7 +31,9 @@ public class MidiController : MonoBehaviour {
 	void Start () {
 		string midiFile = LoadGame.getSongPath ();
 		MIDIPlayer player = GetComponent<MIDIPlayer> ();
+		player.enabled = false;
 		if (midiFile != "") player.midiFilePath = midiFile;
+		player.enabled = true;
 
 		magnitudeSum = 0;
 		magnitudeCount = 0;
